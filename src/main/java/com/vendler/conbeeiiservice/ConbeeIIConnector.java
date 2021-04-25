@@ -5,6 +5,8 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +20,7 @@ public class ConbeeIIConnector {
     private ConnectionFactory connectionFactory;
     private Connection connection;
     private Channel channel;
-
+    Logger logger = LoggerFactory.getLogger(ConbeeIIConnector.class);
     public ConbeeIIConnector() {
 
     }
@@ -27,7 +29,7 @@ public class ConbeeIIConnector {
         WebSocketClient webSocketClient = new WebSocketClient(URI.create("ws://192.168.1.68:443/api/16BF6AEABD/")) {
             @Override
             public void onOpen(ServerHandshake serverHandshake) {
-                System.out.println("Connected");
+                logger.info("Connected");
             }
 
             @Override
@@ -49,11 +51,11 @@ public class ConbeeIIConnector {
                     }
                 }
                 try {
-                    System.out.println("Message: " + s);
+                    logger.info(String.format("Message: %s" , s));
                     channel.basicPublish("exchange.conbeeII","",null,s.getBytes());
-                    System.out.println("Published");
+                    logger.debug("Published");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error(e.getMessage());
                     channel = null;
                 }
 
@@ -61,13 +63,13 @@ public class ConbeeIIConnector {
 
             @Override
             public void onClose(int i, String s, boolean b) {
-                System.out.println("Close");
+                logger.info("Close");
                 open();
             }
 
             @Override
             public void onError(Exception e) {
-                e.printStackTrace();
+                logger.error(e.getMessage());
             }
         };
         webSocketClient.close();
